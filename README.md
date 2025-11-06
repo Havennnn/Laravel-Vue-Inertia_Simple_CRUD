@@ -330,7 +330,7 @@ const handleDelete = (id) => {
 ```html
 <div v-if="tasks.links?.length">
   <div>
-    Showing {{ tasks.from ?? 0 }} to {{ tasks.to ?? 0 }} of <span class="font-medium">{{ tasks.total ?? 0 }}</span> results
+    Showing {{ tasks.from ?? 0 }} to {{ tasks.to ?? 0 }} of {{ tasks.total ?? 0 }} results
   </div>
 
   <nav aria-label="Pagination">
