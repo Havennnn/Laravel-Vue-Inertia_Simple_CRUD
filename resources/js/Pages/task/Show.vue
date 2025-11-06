@@ -29,7 +29,7 @@
 
         <div>
           <div class="text-xs uppercase tracking-wide text-gray-500">Description</div>
-          <p class="mt-1 text-sm text-gray-700" v-if="task.description?.trim()">
+          <p class="mt-1 text-sm text-gray-700" v-if="task.description?">
             {{ task.description }}
           </p>
           <p class="mt-1 text-sm text-gray-400 italic" v-else>

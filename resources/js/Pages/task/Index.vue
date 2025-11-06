@@ -26,7 +26,7 @@
           v-for="task in tasks.data"
           :key="task.id"
           @click="goToShow(task.id)"
-          class="hover:bg-gray-50/70 hover:cursor-pointer" prefetch
+          class="hover:bg-gray-50/70 hover:cursor-pointer"
         >
           <td class="px-4 py-3 text-sm text-gray-900">{{ task.title }}</td>
 
@@ -107,7 +107,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 
 const props = defineProps({
-  tasks: { type: Object, required: true } // paginator object
+  tasks: { type: Object, required: true }
 })
 
 const goToShow = (id) => router.visit(route('tasks.show', id))

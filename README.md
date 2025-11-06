@@ -1,59 +1,404 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ✅ Task CRUD — Laravel + Inertia.js + Vue 3
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This project is a simple **Task Management** CRUD application built with:
 
-## About Laravel
+- **Laravel (Backend + API + Database)**
+- **Inertia.js (SPA Routing without API calls)**
+- **Vue 3 (Frontend UI)**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+It demonstrates a very simple create, read, update, and delete tasks, while still leveraging Laravel’s server-side routing and validation.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 📂 Features
 
-## Learning Laravel
+| Feature                   | Description                               |
+|---------------------------|-------------------------------------------|
+| List Tasks                | Displays user-owned tasks with pagination |
+| Show Task Details         | View full task details                    |
+| Create Task               | Form to add a new task                    |
+| Edit Task                 | Update fields including status            |
+| Delete Task               | Remove task with confirmation             |
+| Flash Toast Notifications | Shows success messages after actions      |
+| Authorization             | Each user sees only their own tasks       |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠 Routes Overview
 
-## Laravel Sponsors
+```php
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show');
+    Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+});
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🧠 Controller and Frontend Logic Logic
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### List Tasks (`index`)
+```php
+public function index(Request $request)
+{
+    $tasks = $request->user()
+        ->tasks()
+        ->latest()
+        ->paginate(15);
 
-## Contributing
+    return Inertia::render('task/Index', compact('tasks'));
+}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```html
+<script setup>
+const props = defineProps({
+  tasks: { type: Object, required: true }
+})
+</script>
 
-## Code of Conduct
+<template>
+    <tr v-for="task in tasks.data" :key="task.id"">
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+      <td>{{ task.title }}</td>
+      <td>{{ task.description }}</td>
+      <td>{{ task.done ? 'Completed' : 'Pending' }}</td>
 
-## Security Vulnerabilities
+      <td>
+        <div>
+          <button>Edit</button>
+          <button>Delete</button>
+        </div>
+      </td>
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    </tr>
+</template>
+```
 
-## License
+### Show Task (`show`)
+```php
+public function show(Task $task)
+{
+    return Inertia::render('task/Show', compact('task'));
+}
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```html
+<script setup>
+const props = defineProps({
+    task: { 
+        type: Object,
+        required: true
+    }
+})
+</script>
+
+<template>
+    <div>
+      <h1>{{ task.title }}</h1>
+      <span>{{ task.done ? 'Completed' : 'Pending' }}</span>
+    </div>
+
+    <div>
+      <h2>Description</h2>
+      <p v-if="task.description?">{{ task.description }}</p>
+      <p v-else>No description provided.</p>
+    </div>
+</template>
+```
+
+### Create Task (`create`)
+```php
+public function show(Task $task)
+{
+    return Inertia::render('task/Show', compact('task'));
+}
+```
+
+```vue
+<Link :href="route('tasks.create')"> + Add a Task </Link>
+````
+
+### Store Task(`store`)
+```php
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string|max:2000',
+    ]);
+
+    $request->user()->tasks()->create($validated);
+
+    return redirect()->route('tasks.index')
+        ->with('message', 'Task added successfully')
+        ->with('type', 'success');
+}
+```
+
+```html
+<script setup>
+import { useForm } from '@inertiajs/vue3';
+
+const form = useForm({
+    title: '',
+    description: '',
+})
+
+const handleSubmit = () => {
+    console.log(form.data());
+    form.post(route('tasks.store'));
+}
+</script>
+
+<template>
+    <form @submit.prevent="handleSubmit">
+        <label for="title">Title:</label>
+        <input id="title" type="text" v-model="form.title" />
+        <div v-if="form.errors.title">{{ form.errors.title }}</div>
+        
+        <label for="description">Description</label>
+        <textarea id="description" v-model="form.description" />
+        <div v-if="form.errors.description">{{ form.errors.description }}</div>
+
+        <button type="submit" :disabled="form.processing">Add</button>
+    </form>
+</template>
+```
+
+### Edit Task (`edit`)
+```php
+public function edit(Task $task)
+{
+    return Inertia::render('task/Edit', compact('task'));
+}
+```
+
+```html
+<script setup>
+const props = defineProps({
+  tasks: { type: Object, required: true }
+})
+
+const goToShow = (id) => router.visit(route('tasks.show', id))
+const goToEdit = (id) => router.visit(route('tasks.edit', id))
+</script>
+
+<template>
+    <tr v-for="task in tasks.data" :key="task.id" @click="goToShow(task.id)">
+
+      ... index tables and rows
+
+      <td click.stop>
+        <div>
+          <button @click.stop="goToEdit(task.id)">Edit</button>
+          <button>Delete</button>
+        </div>
+      </td>
+
+    </tr>
+<template>
+```
+
+### Update Task (`update`)
+```php
+public function update(Request $request, Task $task)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string|max:2000',
+        'done' => 'required|boolean',
+    ]);
+
+    $task->update($validated);
+
+    return redirect()->route('tasks.index')
+        ->with('message', 'Task updated successfully')
+        ->with('type', 'success');
+}
+```
+
+```html
+<script setup>
+import { useForm } from '@inertiajs/vue3';
+
+const props = defineProps({
+    task: { 
+        type: Object,
+        required: true
+    }
+})
+
+const form = useForm({
+    title: props.task.title,
+    description: props.task.description,
+    done: props.task.done ? 1 : 0,
+})
+
+const handleUpdate = () => {
+    console.log(form.data());
+    form.put(route('tasks.update', props.task.id));
+}
+</script>
+
+<template
+    <form@submit.prevent="handleUpdate">
+      <div>
+        <label for="title">Title</label>
+        <input id="title" type="text" v-model="form.title" />
+        <p v-if="form.errors.title">{{ form.errors.title }}</p>
+      </div>
+
+      <div>
+        <label for="description">Description</label>
+        <textarea v-model="form.description" />
+        <p v-if="form.errors.description">{{ form.errors.description }}</p>
+      </div>
+
+      <div>
+        <label for='status'>Status</label>
+        <select v-model="form.done">
+          <option :value="0">Pending</option>
+          <option :value="1">Completed</option>
+        </select>
+        <p v-if="form.errors.done">{{ form.errors.done }}</p>
+      </div>
+
+      <div>
+        <button type="submit" :disabled="form.processing" >
+          Save Changes
+        </button>
+      </div>
+    </form>
+</template>
+```
+
+### Delete (`destroy`)
+```php
+public function destroy(Task $task)
+{
+    $task->delete();
+
+    return redirect()->route('tasks.index')
+        ->with('message', 'Task deleted successfully')
+        ->with('type', 'success');
+}
+```
+
+```html
+<script setup>
+const props = defineProps({
+  tasks: { type: Object, required: true }
+})
+
+const goToShow = (id) => router.visit(route('tasks.show', id))
+const goToEdit = (id) => router.visit(route('tasks.edit', id))
+
+const handleDelete = (id) => {
+  if (confirm('Are you sure you want to delete this task?')) {
+    router.delete(route('tasks.destroy', id), { preserveScroll: true })
+  }
+}
+
+</script>
+
+<template>
+    <tr v-for="task in tasks.data" :key="task.id" @click="goToShow(task.id)">
+
+      ... index tables and rows
+
+      <td @click.stop>
+        <div>
+          <button @click.stop="goToEdit(task.id)">Edit</button>
+          <button @click.stop="handleDelete(task.id)">Delete</button>
+        </div>
+      </td>
+
+    </tr>
+<template>
+```
+
+## 🎨 Vue 3 Frontend Logic
+
+### ✅ Pagination (`task/Index.vue`)
+
+```html
+<div v-if="tasks.links?.length">
+  <div>
+    Showing {{ tasks.from ?? 0 }} to {{ tasks.to ?? 0 }} of <span class="font-medium">{{ tasks.total ?? 0 }}</span> results
+  </div>
+
+  <nav aria-label="Pagination">
+    <Link
+      v-for="(link, index) in tasks.links"
+      :key="index"
+      :href="link.url || ''"
+      preserve-scroll
+      :only="['tasks']"
+      v-html="link.label"
+      :class="[link.active, !link.url]"
+    />
+  </nav>
+</div>
+```
+
+## 🔔 Toast Notifications (Global in Layout)
+
+Triggered on any Inertia redirect:
+
+```js
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage()
+const toast = ref(null)
+const toastType = ref('success')
+
+let hideTimer = null
+
+function showToast(message, type = 'success', ms = 2000) {
+  toast.value = message
+  toastType.value = type
+
+  if (hideTimer) clearTimeout(hideTimer)
+  hideTimer = window.setTimeout(() => (toast.value = null), ms)
+}
+
+function handleFlash() {
+  const msg = page.props.flash?.message
+  const type = page.props.flash?.type || 'success'
+  if (msg) showToast(msg, type)
+}
+
+onMounted(() => {
+  handleFlash()
+  router.on('success', handleFlash)
+})
+
+onBeforeUnmount(() => {
+  if (hideTimer) clearTimeout(hideTimer)
+})
+```
+
+```html
+<div v-if="toast" @click="toast = null">
+    {{ toast }}
+</div>
+```
+
+---
+
+## ✅ Summary
+
+| Action   | View          | Route                 | Method               |
+|----------|---------------|-----------------------|----------------------|
+| List     | `Index.vue`   | GET `/tasks`          | index                |
+| Show     | `Show.vue`    | GET `/tasks/{task}`   | show                 |
+| Create   | `Create.vue`  | POST `/tasks`         | store                |
+| Edit     | `Edit.vue`    | PUT `/tasks/{task}`   | update               |
+| Delete   | `Index.vue`   | DELETE `/tasks/{task}`| destroy              |
+| Toasts   | Global Layout | Flash messages        | router.on('success') |
